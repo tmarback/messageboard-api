@@ -1,0 +1,154 @@
+openapi: '3.0.2'
+info:
+  title: Mio 3rd Anniversary Fan-Website API
+  version: '1.0'
+servers:
+  - url: https://api.miosha.moe/v1 # Tentative
+
+paths:
+  /messages:
+    get:
+      summary: Retrieves posted messages.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 0
+          required: true
+          description: The number of the page to retrieve
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          required: true
+          description: The number of items to use per page
+      responses:
+        '200':
+          description: Page found and returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                    description: The number of the page that was retrieved
+                  pageCount:
+                    type: integer
+                    description: The number of pages that exist with the given page size
+                  pages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: There is no page with the given number for the given page size
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Error'
+                  - type: object
+                    properties:
+                      pageCount:
+                        type: integer
+                        description: The number of pages that exist with the given page size
+                    required:
+                      - pageCount
+    post:
+      summary: Posts a new message.
+      requestBody:
+        description: The content of the message to post
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageContent'
+      responses:
+        '201':
+          description: Message posted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: >
+            There is already a message with the given author.
+            The response body provides the ID and posting time of the existing message.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageMetadata'
+        '429':
+          $ref: '#/components/responses/RateLimit'
+
+components:
+  responses:
+    BadRequest:
+      description: The request sent by the client was malformed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    RateLimit:
+      description: The user has sent too many requests in a short amount of time
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: How many seconds to wait before trying again
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
+    MessageId:
+      type: integer
+      description: The ID of a message
+    MessageContent:
+      type: object
+      properties:
+        author:
+          type: string
+          description: The user that posted the message
+        content:
+          type: string
+          description: The content of the message
+      required:
+        - author
+        - content
+    MessageMetadata:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/MessageId'
+        timestamp:
+          type: string
+          format: date-time
+          description: The timestamp of when the message was posted
+      required:
+        - id
+        - timestamp
+    Message:
+      allOf:
+        - $ref: '#/components/schemas/MessageMetadata'
+        - $ref: '#/components/schemas/MessageContent'
