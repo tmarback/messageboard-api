@@ -3,10 +3,24 @@ info:
   title: Mio 3rd Anniversary Fan-Website API
   version: '1.0'
 servers:
-  - url: https://api.miosha.moe/v1 # Tentative
-    description: Production server
-  - url: http://localhost:8855
-    description: Default URI for a locally-hosted test server
+  - url: 'https://api.miosha.moe/{version}' # Tentative
+    description: Live server
+    variables:
+      version:
+        enum:
+          - v1
+          - dev
+        default: dev
+        description: > 
+          Specifies the API version to use. The special value `dev` specifies a test server that runs
+          the latest build of the server (which implements either the latest or next version of the API).
+  - url: 'http://localhost:{port}'
+    description: Locally-hosted server
+    variables:
+      port:
+        default: 8855
+        description: The port the server listens to
+
 
 paths:
   /messages:
