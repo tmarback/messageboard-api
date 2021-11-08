@@ -1,6 +1,6 @@
 'use strict';
 
-const serverPort = 8855;
+const serverPort = process.env.PORT || 8855;
 
 const express = require("express");
 const http = require('http');
