@@ -2,8 +2,15 @@ openapi: '3.0.2'
 info:
   title: Mio 3rd Anniversary Fan-Website API
   version: '1.0'
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  externalDocs:
+    description: Compiled documentation
+    url: https://api.miosha.moe/anniv3/v1/spec
+
 servers:
-  - url: 'https://api.miosha.moe/{version}' # Tentative
+  - url: 'https://api.miosha.moe/anniv3/{version}'
     description: Live server
     variables:
       version:
