@@ -1,0 +1,24 @@
+{
+  "name": "mio-3rd-anniversary-fan-website-api",
+  "version": "1.0.0",
+  "description": "API for the fan website made for Ookami Mio's 3rd anniversary",
+  "main": "index.js",
+  "scripts": {
+    "prestart": "npm install",
+    "start": "node index.js"
+  },
+  "keywords": [
+    "hololive"
+  ],
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "express": "^4.16.3",
+    "express-openapi-validator": "^4.13.2",
+    "swagger-ui-express": "^4.1.6",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.14"
+  }
+}

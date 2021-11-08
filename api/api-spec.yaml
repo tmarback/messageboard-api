@@ -4,17 +4,29 @@ info:
   version: '1.0'
 servers:
   - url: https://api.miosha.moe/v1 # Tentative
+    description: Production server
+  - url: http://localhost:8855
+    description: Default URI for a locally-hosted test server
 
 paths:
   /messages:
     get:
+      tags:
+        - Messages
       summary: Retrieves posted messages.
+      description: >
+        Retrieves posted messages in a paginated format.
+
+        There is no guarantee that the message list will not change between calls
+        to this method, so the same call in different points in time may give different results.
+      operationId: getMessages
+      x-eov-operation-handler: messagesHandler
       parameters:
         - in: query
           name: page
           schema:
             type: integer
-            minimum: 0
+            minimum: 1
           required: true
           description: The number of the page to retrieve
         - in: query
@@ -60,7 +72,12 @@ paths:
                     required:
                       - pageCount
     post:
+      tags:
+        - Messages
+        - Submission
       summary: Posts a new message.
+      operationId: postMessage
+      x-eov-operation-handler: messagesHandler
       requestBody:
         description: The content of the message to post
         required: true
@@ -114,8 +131,6 @@ components:
     Error:
       type: object
       properties:
-        code:
-          type: string
         message:
           type: string
       required:
