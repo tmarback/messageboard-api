@@ -152,10 +152,12 @@ components:
     Error:
       type: object
       properties:
+        status:
+          type: integer
         message:
           type: string
       required:
-        - code
+        - status
         - message
     MessageId:
       type: integer

@@ -30,7 +30,9 @@ app.use(
 
 app.use((err, req, res, next) => {
   console.error(err)
-  res.status(err.status || 500).json({
+  const status = err.status || 500;
+  res.status(status).json({
+    status: status,
     message: err.message,
     // errors: err.errors,
   });
