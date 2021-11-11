@@ -5,9 +5,9 @@ info:
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
-  externalDocs:
-    description: Compiled documentation
-    url: https://api.miosha.moe/anniv3/v1/spec
+  # externalDocs:
+  #   description: Compiled documentation
+  #   url: https://api.miosha.moe/anniv3/v1/spec
 
 servers:
   - url: 'https://api.miosha.moe/anniv3/{version}'
@@ -25,7 +25,7 @@ servers:
     description: Locally-hosted server
     variables:
       port:
-        default: 8855
+        default: '8855'
         description: The port the server listens to
 
 
