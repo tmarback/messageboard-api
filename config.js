@@ -1,6 +1,7 @@
 const devMode = ( process.env.DEV || 1 ) !== 0;
 const verboseMode = ( process.env.VERBOSE || 0 ) !== 0;
 const serverPort = process.env.PORT || 8855;
+const logToFile = ( process.env.LOG_TO_FILE || ( devMode ? 0 : 1 ) ) !== 0;
 
 const loglevel = verboseMode ? 'verbose' : ( devMode ? 'debug' : info );
 
@@ -15,11 +16,10 @@ var transports = [new winston.transports.Console({
         winston.format.colorize(),
         winston.format.timestamp(),
         consoleFormat,
-        //winston.format.json(),
     ),
 })];
 
-if ( !devMode ) {
+if ( logToFile ) {
     transports.push(new winston.transports.File({
         filename: './logs/server.log',
         maxsize: 100 * 1000 * 1000,
