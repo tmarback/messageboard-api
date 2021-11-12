@@ -1,6 +1,6 @@
 'use strict';
 
-const { devMode, serverPort, baseLogger, loglevel } = require('./config');
+const { devMode, localMode, serverPort, baseLogger, loglevel } = require('./config');
 
 const express = require("express");
 const http = require('http');
@@ -13,7 +13,7 @@ const swaggerUI = require('swagger-ui-express');
 const OpenApiValidator = require('express-openapi-validator');
 
 const expressWinston = require('express-winston');
-const winston = require('winston');
+const e = require('express');
 
 app.use(expressWinston.logger({
     winstonInstance: baseLogger,
@@ -26,9 +26,45 @@ app.use(expressWinston.logger({
 app.use(express.json());
 
 const specPath = path.join(__dirname, '/api/api-spec.yaml');
-app.use('/spec/raw', express.static(specPath));
-
 const spec = YAML.load(specPath);
+if ( localMode ) { // Remove all security in local mode
+    delete spec.components.security;
+    delete spec.components.securitySchemes;
+    var validateSecurity = false;
+} else if ( devMode ) { // Use only API key for dev server
+    const apiKeyHeader = 'X-API-Key';
+    spec.components.securitySchemes = {
+        ApiKeyAuth: {
+            type: 'apiKey',
+            in: 'header',
+            name: apiKeyHeader,
+        }
+    };
+    spec.security = [
+        { ApiKeyAuth: [] }
+    ];
+    const apiKeys = new Set([ '1214' ]);
+    validateSecurity = {
+        handlers: {
+            ApiKeyAuth: (req, scopes, schema) => {
+                if ( apiKeys.has( req.get( apiKeyHeader ) ) ) {
+                    return true;
+                } else {
+                    throw { status: 403, message: 'Forbidden' };
+                }
+            }
+        }
+    }
+} else {
+    const fullVersion = spec.info.version;
+    const version = `v${fullVersion.split(".")[0]}`;
+    spec.servers[0].variables.version.enum = [ version ];
+    spec.servers[0].variables.version.default = version;
+    validateSecurity = true;
+}
+app.get('/spec/raw.json', (req, res) => {
+    res.status(200).json(spec);
+})
 app.use('/spec', swaggerUI.serve, swaggerUI.setup(spec));
 
 app.use(
@@ -36,7 +72,7 @@ app.use(
         apiSpec: spec,
         validateRequests: true,
         validateResponses: devMode,
-        validateSecurity: !devMode,
+        validateSecurity: validateSecurity,
         validateApiSpec: true,
         validateFormats: 'fast',
         unknownFormats: true,

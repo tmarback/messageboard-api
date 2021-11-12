@@ -1,9 +1,10 @@
 const devMode = ( process.env.DEV || 1 ) !== 0;
+const localMode = ( process.env.LOCAL || 0 ) !== 0;
 const verboseMode = ( process.env.VERBOSE || 0 ) !== 0;
 const serverPort = process.env.PORT || 8855;
-const logToFile = ( process.env.LOG_TO_FILE || ( devMode ? 0 : 1 ) ) !== 0;
+const logToFile = ( process.env.LOG_TO_FILE || ( localMode ? 0 : 1 ) ) !== 0;
 
-const loglevel = verboseMode ? 'verbose' : ( devMode ? 'debug' : info );
+const loglevel = verboseMode ? 'verbose' : ( devMode ? 'debug' : 'info' );
 
 const winston = require('winston');
 
@@ -39,6 +40,7 @@ const logger = winston.createLogger({
 
 module.exports = {
     devMode: devMode,
+    localMode: localMode,
     verboseMode: verboseMode,
     serverPort: serverPort,
     baseLogger: logger,

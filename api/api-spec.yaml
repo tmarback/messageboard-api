@@ -1,13 +1,10 @@
 openapi: '3.0.2'
 info:
   title: Mio 3rd Anniversary Fan-Website API
-  version: '1.0'
+  version: '1.0.0'
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
-  # externalDocs:
-  #   description: Compiled documentation
-  #   url: https://api.miosha.moe/anniv3/v1/spec
 
 servers:
   - url: 'https://api.miosha.moe/anniv3/{version}'
@@ -15,12 +12,9 @@ servers:
     variables:
       version:
         enum:
-          - v1
           - dev
         default: dev
-        description: > 
-          Specifies the API version to use. The special value `dev` specifies a test server that runs
-          the latest build of the server (which implements either the latest or next version of the API).
+        description: The API version.
   - url: 'http://localhost:{port}'
     description: Locally-hosted server
     variables:
