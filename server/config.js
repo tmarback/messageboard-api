@@ -4,6 +4,8 @@ const verboseMode = ( process.env.VERBOSE || 0 ) !== 0;
 const serverPort = process.env.PORT || 8855;
 
 const logToFile = ( process.env.LOG_TO_FILE || ( localMode ? 0 : 1 ) ) !== 0;
+const logDir = process.env.LOG_DIR || './logs';
+const logFile = path.join( logDir, 'server.log' );
 
 const dbHost = process.env.DB_HOST || 'localhost';
 const dbPort = ( process.env.DB_PORT || 5432 ) | 0;
@@ -28,7 +30,7 @@ var transports = [new winston.transports.Console({
 
 if ( logToFile ) {
     transports.push(new winston.transports.File({
-        filename: './logs/server.log',
+        filename: logFile,
         maxsize: 100 * 1000 * 1000,
         maxFiles: 5,
         tailable: true,
