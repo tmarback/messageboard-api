@@ -1,0 +1,88 @@
+name: Deploy to server
+
+on:
+  push:
+    branches:
+      - 'develop'
+    tags:
+      - 'v*.*.*'
+
+concurrency: 
+  group: ${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    name: Build and publish image
+    outputs:
+      env: ${{ steps.tags.outputs.env }}
+      ver: ${{ steps.tags.outputs.ver }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: |
+            ghcr.io/tmarback/mio-api-anniv3
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to GHCR
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./server
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Determine deploy tags
+        id: tags
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            echo "::set-output name=env::development"
+            echo "::set-output name=ver::dev"
+          else
+            echo "::set-output name=env::production"
+            echo "::set-output name=ver::$( echo "${{ github.ref_name }}" | grep -oE 'v[0-9]+' )"
+          fi
+
+  deploy:
+    runs-on: ubuntu-20.04
+    name: Deploy to server
+    needs: build
+    environment:
+      name: ${{ needs.build.outputs.env }}
+      url: https://api.miosha.moe/anniv3/${{ needs.build.outputs.ver }}
+    concurrency: 
+      group: ${{ needs.build.outputs.ver }}
+      cancel-in-progress: false
+    steps:
+      - name: Deploy through SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script_stop: true
+          script: |
+            cd docker/anniv3
+            mkdir -p "${{ needs.build.outputs.ver }}/log"
+            ENV_FILE="${{ needs.build.outputs.ver }}.env"
+            [ -f "${ENV_FILE}" ]
+            docker-compose --env-file "${ENV_FILE}" pull
+            docker-compose --env-file "${ENV_FILE}" up --detach --force-recreate
