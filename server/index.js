@@ -47,20 +47,21 @@ if ( localMode ) { // Remove all security in local mode
         handlers: {
             ApiKeyAuth: (req, scopes, schema) => {
                 const key = req.get( apiKeyHeader );
-                const res = await apiKeyPool.query( 'SELECT api_key_auth.has_access( $1::text, $2::text, $3::text )',
-                                                    [ key, 'anniv3', 'dev' ] );
-                switch ( res.rows[0].has_access ) {
-                    case 0: // Valid key, has access
-                        return true;
-                    case 1: // Valid key, no access
-                        throw { status: 403, message: 'Forbidden' };
-                    case 2: // Invalid key
-                        throw { status: 401, message: 'Unauthorized', headers: [ 
-                            [ 'WWW-Authenticate', apiKeyHeader ],
-                        ] };
-                    default: // WTF?
-                        throw Error( "Unexpected response to API key check query" );
-                }
+                return apiKeyPool.query( 'SELECT api_key_auth.has_access( $1::text, $2::text, $3::text )',
+                                         [ key, 'anniv3', 'dev' ] ).then( res => {
+                    switch ( res.rows[0].has_access ) {
+                        case 0: // Valid key, has access
+                            return true;
+                        case 1: // Valid key, no access
+                            throw { status: 403, message: 'Forbidden' };
+                        case 2: // Invalid key
+                            throw { status: 401, message: 'Unauthorized', headers: [ 
+                                [ 'WWW-Authenticate', apiKeyHeader ],
+                            ] };
+                        default: // WTF?
+                            throw Error( "Unexpected response to API key check query" );
+                    }
+                });
             }
         }
     }
