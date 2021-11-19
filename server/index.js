@@ -27,10 +27,12 @@ app.use(express.json());
 const specPath = path.join(__dirname, '/api/api-spec.yaml');
 const spec = YAML.load(specPath);
 if ( localMode ) { // Remove all security in local mode
+    baseLogger.info("LOCAL mode - removing all security");
     delete spec.components.security;
     delete spec.components.securitySchemes;
     var validateSecurity = false;
 } else if ( devMode ) { // Use only API key for dev server
+    baseLogger.info("DEV mode - configuring API key security");
     const apiKeyHeader = 'X-API-Key';
     spec.components.securitySchemes = {
         ApiKeyAuth: {
@@ -66,6 +68,7 @@ if ( localMode ) { // Remove all security in local mode
         }
     }
 } else {
+    baseLogger.info("PROD mode - Setting version");
     const fullVersion = spec.info.version;
     const version = `v${fullVersion.split(".")[0]}`;
     spec.servers[0].variables.version.enum = [ version ];
@@ -120,5 +123,5 @@ app.use((err, req, res, next) => {
 });
 
 http.createServer(app).listen(serverPort, function () {
-    baseLogger.info(`Starting server on port ${serverPort} with log level ${loglevel}, dev mode ${devMode ? 'on' : 'off'}`);
+    baseLogger.info(`Starting server on port ${serverPort} with log level ${loglevel}, dev mode ${devMode ? 'on' : 'off'}, local mode ${localMode ? 'on' : 'off'}`);
 });
