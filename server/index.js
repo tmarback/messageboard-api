@@ -1,6 +1,6 @@
 'use strict';
 
-const { devMode, localMode, serverPort, baseLogger, loglevel } = require('./config');
+const { devMode, localMode, serverPort, baseLogger, loglevel, makePool } = require('./config');
 
 const express = require("express");
 const http = require('http');
@@ -13,7 +13,6 @@ const swaggerUI = require('swagger-ui-express');
 const OpenApiValidator = require('express-openapi-validator');
 
 const expressWinston = require('express-winston');
-const e = require('express');
 
 app.use(expressWinston.logger({
     winstonInstance: baseLogger,
@@ -43,14 +42,24 @@ if ( localMode ) { // Remove all security in local mode
     spec.security = [
         { ApiKeyAuth: [] }
     ];
-    const apiKeys = new Set([ '1214' ]);
+    const apiKeyPool = makePool( 'auth' );
     validateSecurity = {
         handlers: {
             ApiKeyAuth: (req, scopes, schema) => {
-                if ( apiKeys.has( req.get( apiKeyHeader ) ) ) {
-                    return true;
-                } else {
-                    throw { status: 403, message: 'Forbidden' };
+                const key = req.get( apiKeyHeader );
+                const res = await apiKeyPool.query( 'SELECT api_key_auth.has_access( $1::text, $2::text, $3::text )',
+                                                    [ key, 'anniv3', 'dev' ] );
+                switch ( res.rows[0].has_access ) {
+                    case 0: // Valid key, has access
+                        return true;
+                    case 1: // Valid key, no access
+                        throw { status: 403, message: 'Forbidden' };
+                    case 2: // Invalid key
+                        throw { status: 401, message: 'Unauthorized', headers: [ 
+                            [ 'WWW-Authenticate', apiKeyHeader ],
+                        ] };
+                    default: // WTF?
+                        throw Error( "Unexpected response to API key check query" );
                 }
             }
         }
@@ -98,6 +107,10 @@ app.use(expressWinston.errorLogger({
 app.use((err, req, res, next) => {
     // console.error(err);
     const status = err.status || 500;
+    const headers = err.headers || [];
+    for ( const [ header, val ] of headers ) {
+        res.set( header, val );
+    }
     res.status(status).json({
         status: status,
         message: err.message,
