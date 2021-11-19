@@ -1,7 +1,9 @@
 const devMode = ( process.env.DEV || 1 ) !== 0;
-const localMode = ( process.env.LOCAL || 0 ) !== 0;
+const localMode = ( process.env.LOCAL || 1 ) !== 0;
 const verboseMode = ( process.env.VERBOSE || 0 ) !== 0;
 const serverPort = process.env.PORT || 8855;
+
+const path = require('path');
 
 const logToFile = ( process.env.LOG_TO_FILE || ( localMode ? 0 : 1 ) ) !== 0;
 const logDir = process.env.LOG_DIR || './logs';
