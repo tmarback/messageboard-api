@@ -1,3 +1,3 @@
 [submodule "sql/root"]
 	path = sql/root
-	url = https://github.com/tmarback/api-db.git
+	url = git@github.com:tmarback/api-db.git

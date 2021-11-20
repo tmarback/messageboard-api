@@ -23,7 +23,7 @@ ENV LOG_DIR="/var/log/server"
 
 ENV DB_HOST="localhost"
 ENV DB_PORT=5432
-ENV DB_USER=anniv3
+ENV DB_USER="dev"
 
 # Server ports
 EXPOSE ${PORT}
