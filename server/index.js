@@ -54,6 +54,8 @@ if ( localMode ) { // Remove all security in local mode
                 authLogger.debug( `Evaluating API key ${key}` );
                 return apiKeyPool.query( 'SELECT api_key_auth.has_access( $1::text, $2::text, $3::text )',
                                          [ key, 'anniv3', 'dev' ] ).then( res => {
+                    authLogger.debug( `DB response for API key ${key} received` );
+                    authLogger.debug( `DB response for API key ${key} has ${res.rows.length} rows` );
                     const result = res.rows[0].has_access;
                     authLogger.verbose( `API key ${key} returned response ${result} from the database` );
                     switch ( result ) {
