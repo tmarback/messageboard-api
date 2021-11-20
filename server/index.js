@@ -1,6 +1,6 @@
 'use strict';
 
-const { devMode, localMode, serverPort, baseLogger, loglevel, makePool } = require('./config');
+const { devMode, localMode, serverPort, loglevel, baseLogger, makeLogger, makePool } = require('./config');
 
 const express = require("express");
 const http = require('http');
@@ -14,8 +14,9 @@ const OpenApiValidator = require('express-openapi-validator');
 
 const expressWinston = require('express-winston');
 
+const apiLogger = makeLogger( 'API' );
 app.use(expressWinston.logger({
-    winstonInstance: baseLogger,
+    winstonInstance: apiLogger,
     level: 'info',
     expressFormat: true,
     colorize: true,
@@ -45,22 +46,30 @@ if ( localMode ) { // Remove all security in local mode
         { ApiKeyAuth: [] }
     ];
     const apiKeyPool = makePool( 'auth' );
+    const authLogger = makeLogger( 'auth' );
     validateSecurity = {
         handlers: {
             ApiKeyAuth: (req, scopes, schema) => {
                 const key = req.get( apiKeyHeader );
+                authLogger.debug( `Evaluating API key ${key}` );
                 return apiKeyPool.query( 'SELECT api_key_auth.has_access( $1::text, $2::text, $3::text )',
                                          [ key, 'anniv3', 'dev' ] ).then( res => {
-                    switch ( res.rows[0].has_access ) {
+                    const result = res.rows[0].has_access;
+                    authLogger.verbose( `API key ${key} returned response ${result} from the database` );
+                    switch ( result ) {
                         case 0: // Valid key, has access
+                            authLogger.debug( `API key ${key} is authorized` );
                             return true;
                         case 1: // Valid key, no access
+                            authLogger.debug( `API key ${key} is valid but has insufficient permissions` );
                             throw { status: 403, message: 'Forbidden' };
                         case 2: // Invalid key
+                            authLogger.debug( `API key ${key} is invalid` );
                             throw { status: 401, message: 'Unauthorized', headers: [ 
                                 [ 'WWW-Authenticate', apiKeyHeader ],
                             ] };
                         default: // WTF?
+                            authLogger.error( `API key ${key} query returned invalid response ${result}` );
                             throw Error( "Unexpected response to API key check query" );
                     }
                 });
@@ -94,7 +103,7 @@ app.use(
 );
 
 app.use(expressWinston.errorLogger({
-    winstonInstance: baseLogger,
+    winstonInstance: apiLogger,
     msg: `[{{err.status}}] {{err.message}} {{req.method}}${devMode ? '\n{{err.stack}}' : ''}`,
     meta: true,
     responseField: null, // Error object already has the relevant info
