@@ -1,8 +1,8 @@
 CREATE SCHEMA IF NOT EXISTS anniv3;
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" SCHEMA anniv3;
 CREATE TABLE IF NOT EXISTS anniv3.users(
-    id          UUID            PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id          UUID            PRIMARY KEY DEFAULT anniv3.uuid_generate_v4(),
     username    VARCHAR( 100 )  NOT NULL UNIQUE
 );
 
