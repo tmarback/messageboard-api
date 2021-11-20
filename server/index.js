@@ -25,6 +25,10 @@ app.use(expressWinston.logger({
 
 app.use(express.json());
 
+app.get('/', (req, res) => { // Redirect root to specification
+    res.redirect(301, '/spec/');
+});
+
 const specPath = path.join(__dirname, '/api/api-spec.yaml');
 const spec = YAML.load(specPath);
 if ( localMode ) { // Remove all security in local mode
