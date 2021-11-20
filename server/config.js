@@ -65,13 +65,15 @@ module.exports = {
         child.defaultMeta = { ...logger.defaultMeta, loggerName: name }; // https://github.com/winstonjs/winston/issues/1788
         return child;
     },
-    makePool: ( database ) => {
+    makePool: ( database, max ) => {
         return new Pool({
             user: dbUser,
             password: dbPass,
             host: dbHost,
             database: database,
             port: dbPort,
+            application_name: 'anniv3-website',
+            max: max,
           });
     },
 };

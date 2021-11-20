@@ -49,7 +49,7 @@ if ( localMode ) { // Remove all security in local mode
     spec.security = [
         { ApiKeyAuth: [] }
     ];
-    const apiKeyPool = makePool( 'auth' );
+    const apiKeyPool = makePool( 'auth', devMode ? 1 : 5 );
     const authLogger = makeLogger( 'auth' );
     validateSecurity = {
         handlers: {
