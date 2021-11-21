@@ -69,7 +69,7 @@ paths:
                   pageCount:
                     type: integer
                     description: The number of pages that exist with the given page size
-                  pages:
+                  pageData:
                     type: array
                     items:
                       $ref: '#/components/schemas/Message'
@@ -157,33 +157,52 @@ components:
         - status
         - message
     MessageId:
-      type: integer
       description: The ID of a message
+      type: integer
     MessageContent:
+      description: The main data of a message
       type: object
       properties:
         author:
-          type: string
-          minLength: 1
-          maxLength: 100
           description: The user that posted the message
+          type: object
+          properties:
+            name:
+              description: The name of the user
+              type: string
+              minLength: 1
+              maxLength: 20
+            avatar:
+              description: | 
+                The image frames that compose the animated user avatar.
+                If a single frame, the avatar is a static image.
+                May be empty, in which case a default avatar is used.
+              type: array
+              maxItems: 2
+              items:
+                type: string
+                format: uri
+          required:
+            - name
+            - avatar
         content:
+          description: The content of the message
           type: string
           minLength: 1
-          maxLength: 4096
-          description: The content of the message
+          maxLength: 500
       required:
         - author
         - content
     MessageMetadata:
+      description: The metadata of a message
       type: object
       properties:
         id:
           $ref: '#/components/schemas/MessageId'
         timestamp:
+          description: The timestamp of when the message was posted
           type: string
           format: date-time
-          description: The timestamp of when the message was posted
       required:
         - id
         - timestamp
