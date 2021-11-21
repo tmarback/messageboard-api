@@ -8,13 +8,12 @@ const path = require('path');
 const logToFile = ( process.env.LOG_TO_FILE || ( localMode ? 0 : 1 ) ) != 0;
 const logDir = process.env.LOG_DIR || './logs';
 const logFile = path.join( logDir, 'server.log' );
+const loglevel = process.env.LOG_LEVEL || ( devMode ? 'debug' : ( verboseMode ? 'verbose' : 'info' ) );
 
 const dbHost = process.env.DB_HOST || 'localhost';
 const dbPort = ( process.env.DB_PORT || 5432 ) | 0;
 const dbUser = process.env.DB_USER || ( devMode ? 'dev' : 'anniv3' );
 const dbPass = process.env.DB_PASSWORD || 'nopassword';
-
-const loglevel = devMode ? 'debug' : ( verboseMode ? 'verbose' : 'info' );
 
 const winston = require('winston');
 const { Pool } = require('pg')

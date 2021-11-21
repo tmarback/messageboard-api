@@ -3,6 +3,33 @@
 const { getClient } = require( './database' );
 const asyncHandler = require( 'express-async-handler' );
 
+const AVATAR_PROTOCOLS = [
+    'http',
+    'https,'
+].map( p => `${p}://` );
+const AVATAR_FORMATS = [
+    'png',
+    'jpg',
+    'jpeg',
+].map( f => `.${f}` );
+
+/**
+ * Determines if a given URL is NOT a valid image URL.
+ * NOTE: already verified by express-openapi-validator
+ * to be a valid URI, just need to check if is a supported
+ * one.
+ * 
+ * @param {string} url The URL to check
+ * @returns {boolean} Whether the URL is NOT valid
+ */
+function isAvatarUrlInvalid( url ) {
+    
+    const valid = AVATAR_PROTOCOLS.some( proto => url.startsWith( proto ) ) &&
+                  AVATAR_FORMATS  .some( fmt   => url  .endsWith( fmt   ) );
+    return !valid;
+
+}
+
 module.exports = {
     getMessages: asyncHandler( async ( req, res ) => {
 
@@ -62,8 +89,23 @@ module.exports = {
     }),
     postMessage: asyncHandler( async ( req, res ) => {
 
+        /**
+         * @typedef {Object} Author
+         * @property {string} name
+         * @property {string[]} avatar
+         */
+        /** @type {Author} */
         const author = req.body.author;
+        /** @type {string} */
         const content = req.body.content;
+
+        const invalidFrames = author.avatar.filter( isAvatarUrlInvalid );
+        if ( invalidFrames.length > 0 ) {
+            throw {
+                status: 400,
+                message: `Invalid avatar frame URLs: [${invalidFrames.join( ', ' )}]`,
+            };
+        }
 
         const client = await getClient();
         var result;

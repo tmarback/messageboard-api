@@ -15,7 +15,7 @@ const OpenApiValidator = require('express-openapi-validator');
 const expressWinston = require('express-winston');
 
 const apiLogger = makeLogger( 'API' );
-app.use(expressWinston.logger({
+app.use( expressWinston.logger({
     winstonInstance: apiLogger,
     level: 'info',
     expressFormat: true,
@@ -25,19 +25,19 @@ app.use(expressWinston.logger({
 
 app.use(express.json());
 
-app.get('/', (req, res) => { // Redirect root to specification
-    res.redirect(301, '/spec/');
+app.get( '/', ( req, res ) => { // Redirect root to specification
+    res.redirect( 301, '/spec/' );
 });
 
-const specPath = path.join(__dirname, '/api/api-spec.yaml');
-const spec = YAML.load(specPath);
+const specPath = path.join( __dirname, '/api/api-spec.yaml' );
+const spec = YAML.load( specPath );
 if ( localMode ) { // Remove all security in local mode
-    baseLogger.info("LOCAL mode - removing all security");
+    baseLogger.info( "LOCAL mode - removing all security" );
     delete spec.components.security;
     delete spec.components.securitySchemes;
     var validateSecurity = false;
 } else if ( devMode ) { // Use only API key for dev server
-    baseLogger.info("DEV mode - configuring API key security");
+    baseLogger.info( "DEV mode - configuring API key security" );
     const apiKeyHeader = 'X-API-Key';
     spec.components.securitySchemes = {
         ApiKeyAuth: {
@@ -83,17 +83,17 @@ if ( localMode ) { // Remove all security in local mode
         }
     }
 } else {
-    baseLogger.info("PROD mode - Setting version");
+    baseLogger.info( "PROD mode - Setting version" );
     const fullVersion = spec.info.version;
-    const version = `v${fullVersion.split(".")[0]}`;
+    const version = `v${fullVersion.split( "." )[0]}`;
     spec.servers[0].variables.version.enum = [ version ];
     spec.servers[0].variables.version.default = version;
     validateSecurity = true;
 }
-app.get('/spec/raw.json', (req, res) => {
-    res.status(200).json(spec);
+app.get( '/spec/raw.json', ( req, res ) => {
+    res.status( 200 ).json( spec );
 })
-app.use('/spec', swaggerUI.serve, swaggerUI.setup(spec));
+app.use( '/spec', swaggerUI.serve, swaggerUI.setup( spec ) );
 
 app.use(
     OpenApiValidator.middleware({
@@ -108,7 +108,7 @@ app.use(
     }),
 );
 
-app.use(expressWinston.errorLogger({
+app.use( expressWinston.errorLogger({
     winstonInstance: apiLogger,
     msg: `[{{err.status}}] {{err.message}} {{req.method}}${devMode ? '\n{{err.stack}}' : ''}`,
     meta: true,
@@ -130,13 +130,13 @@ app.use((err, req, res, next) => {
     for ( const [ header, val ] of headers ) {
         res.set( header, val );
     }
-    res.status(status).json({
+    res.status( status ).json({
         status: status,
         message: err.message,
         // errors: err.errors,
     });
 });
 
-http.createServer(app).listen(serverPort, function () {
-    baseLogger.info(`Starting server on port ${serverPort} with log level ${loglevel}, dev mode ${devMode ? 'on' : 'off'}, local mode ${localMode ? 'on' : 'off'}`);
+http.createServer( app ).listen( serverPort, function () {
+    baseLogger.info( `Starting server on port ${serverPort} with log level ${loglevel}, dev mode ${devMode ? 'on' : 'off'}, local mode ${localMode ? 'on' : 'off'}` );
 });
