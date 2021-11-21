@@ -13,6 +13,7 @@ module.exports = {
         var pageData;
         var pageCount;
         try {
+            await client.query( `BEGIN READ ONLY` );
             const resPage = await client.query(`
                 SELECT   anniv3.messages.id AS id, username AS author, content, time_posted AS timestamp
                 FROM     anniv3.messages INNER JOIN anniv3.users ON anniv3.messages.author = anniv3.users.id
@@ -27,6 +28,10 @@ module.exports = {
 
             pageData = resPage.rows;
             pageCount = Math.ceil( resCount.rows[0].total / pageSize );
+            await client.query( `COMMIT` );
+        } catch ( e ) {
+            await client.query( `ROLLBACK` );
+            throw e;
         } finally {
             client.release();
         };
@@ -55,6 +60,7 @@ module.exports = {
         const client = await getClient();
         var result;
         try {
+            await client.query( `BEGIN` );
             await client.query(`
                 INSERT INTO anniv3.users ( username )
                 VALUES ( $1 )
@@ -79,6 +85,10 @@ module.exports = {
                     WHERE username = $1
                 `, [ author ] );
             }
+            await client.query( `COMMIT` );
+        } catch ( e ) {
+            await client.query( `ROLLBACK` );
+            throw e;
         } finally {
             client.release();
         };
