@@ -19,15 +19,12 @@ module.exports = {
                     OFFSET   $2
                 `, [ pageSize, ( page - 1 ) * pageSize ] ),
                 client.query(`
-                    SELECT c.reltuples::bigint AS estimate
-                    FROM   pg_class c
-                    JOIN   pg_namespace n ON n.oid = c.relnamespace
-                    WHERE  c.relname = 'messages'
-                    AND    n.nspname = 'anniv3'
+                    SELECT COUNT(*) AS total
+                    FROM   anniv3.messages
                 ` ) ]);
         }).then( data => {
             const pageData = data[0].rows;
-            const pageCount = parseInt( data[1].rows[0].estimate / pageSize );
+            const pageCount = Math.ceil( data[1].rows[0].total / pageSize );
             if ( pageData.length > 0 ) {
                 res.status( 200 ).json({
                     page: page,
