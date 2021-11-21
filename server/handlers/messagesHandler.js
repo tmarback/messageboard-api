@@ -26,14 +26,22 @@ module.exports = {
                     AND    n.nspname = 'anniv3'
                 ` ) ]);
         }).then( data => {
-            const pages = data[0].rows;
+            const pageData = data[0].rows;
             const pageCount = parseInt( data[1].rows[0].estimate / pageSize );
-            res.status( 200 ).json({
-                page: page,
-                pageSize: pageSize,
-                pageCount: pageCount,
-                pages: pages,
-            });
+            if ( pageData.length > 0 ) {
+                res.status( 200 ).json({
+                    page: page,
+                    pageSize: pageSize,
+                    pageCount: pageCount,
+                    pages: pageData,
+                });
+            } else {
+                res.status( 404 ).json({
+                    status: 404,
+                    message: "Page does not exist",
+                    pageCount: pageCount,
+                });
+            }
         });
 
   },
