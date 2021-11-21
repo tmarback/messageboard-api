@@ -77,6 +77,7 @@ module.exports = {
 
             if ( result.rows.length > 0 ) {
                 res.status( 201 );
+                await client.query( `COMMIT` );
             } else {
                 res.status( 409 );
                 result = await client.query(`
@@ -84,8 +85,8 @@ module.exports = {
                     FROM anniv3.messages INNER JOIN anniv3.users ON anniv3.messages.author = anniv3.users.id
                     WHERE username = $1
                 `, [ author ] );
-            }
-            await client.query( `COMMIT` );
+                await client.query( `ROLLBACK` ); // Should never happen of the first insert succeeding while
+            }                                     // the second fails but JUST IN CASE
         } catch ( e ) {
             await client.query( `ROLLBACK` );
             throw e;
