@@ -1,6 +1,6 @@
 'use strict'
 
-const { conn } = require( './database' );
+const { getClient } = require( './database' );
 
 module.exports = {
   getMessages: (req, res) => {
@@ -8,8 +8,7 @@ module.exports = {
     const page = req.query.page;
     const pageSize = req.query.pageSize;
 
-    conn.connect()
-        .then( client => {
+    getClient().then( client => {
             return Promise.all([
                 client.query( `
                     SELECT   anniv3.messages.id AS id, username AS author, content, time_posted AS timestamp
