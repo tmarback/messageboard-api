@@ -164,9 +164,13 @@ components:
       properties:
         author:
           type: string
+          minLength: 1
+          maxLength: 100
           description: The user that posted the message
         content:
           type: string
+          minLength: 1
+          maxLength: 4096
           description: The content of the message
       required:
         - author
