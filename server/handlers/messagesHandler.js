@@ -2,6 +2,7 @@
 
 const { getClient } = require( './database' );
 const asyncHandler = require( 'express-async-handler' );
+const validator = require("email-validator");
 
 const AVATAR_PROTOCOLS = [
     'http',
@@ -104,6 +105,15 @@ module.exports = {
         const author = req.body.author;
         /** @type {string} */
         const content = req.body.content;
+
+        // TODO: Deep email validation, maybe if https://github.com/mfbx9da4/deep-email-validator
+        // ever gets its dependencies fixed...
+        if ( !validator.validate( author.email ) ) {
+            throw {
+                status: 400,
+                message: `Invalid email address: ${author.email}`,
+            }
+        }
 
         const invalidFrames = author.avatar.filter( isAvatarUrlInvalid );
         if ( invalidFrames.length > 0 ) {
