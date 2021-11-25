@@ -114,12 +114,12 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '409':
           description: >
-            There is already a message with the given author.
+            There is already a message with the given author name or email.
             The response body provides the ID and posting time of the existing message.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageMetadata'
+                $ref: '#/components/schemas/Error'
         '429':
           $ref: '#/components/responses/RateLimit'
 
@@ -156,6 +156,34 @@ components:
       required:
         - status
         - message
+    MessageAuthor:
+      description: A user that posts a message
+      type: object
+      properties:
+        name:
+          description: The name of the user
+          type: string
+          minLength: 1
+          maxLength: 20
+        email:
+          description: |
+            The user's email. This value must be present when posting a message, but it will
+            not be returned by any method in this API. The email must be a valid.
+          type: string
+          format: email
+        avatar:
+          description: | 
+            The image frames that compose the animated user avatar.
+            If a single frame, the avatar is a static image.
+            May be empty, in which case a default avatar is used.
+          type: array
+          maxItems: 2
+          items:
+            type: string
+            format: uri
+      required:
+        - name
+        - avatar
     MessageId:
       description: The ID of a message
       type: integer
@@ -164,27 +192,7 @@ components:
       type: object
       properties:
         author:
-          description: The user that posted the message
-          type: object
-          properties:
-            name:
-              description: The name of the user
-              type: string
-              minLength: 1
-              maxLength: 20
-            avatar:
-              description: | 
-                The image frames that compose the animated user avatar.
-                If a single frame, the avatar is a static image.
-                May be empty, in which case a default avatar is used.
-              type: array
-              maxItems: 2
-              items:
-                type: string
-                format: uri
-          required:
-            - name
-            - avatar
+          $ref: '#/components/schemas/MessageAuthor'
         content:
           description: The content of the message
           type: string

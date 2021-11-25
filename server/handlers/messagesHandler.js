@@ -13,6 +13,11 @@ const AVATAR_FORMATS = [
     'jpeg',
 ].map( f => `.${f}` );
 
+const USER_EXISTS_ERROR = {
+    status: 409,
+    message: `User already posted a message`
+};
+
 /**
  * Determines if a given URL is NOT a valid image URL.
  * NOTE: already verified by express-openapi-validator
@@ -93,6 +98,7 @@ module.exports = {
          * @typedef {Object} Author
          * @property {string} name
          * @property {string[]} avatar
+         * @property {string} email
          */
         /** @type {Author} */
         const author = req.body.author;
@@ -111,11 +117,17 @@ module.exports = {
         var result;
         try {
             await client.query( `BEGIN` );
-            await client.query(`
-                INSERT INTO anniv3.users ( username, avatar )
-                VALUES ( $1, $2 )
+
+            result = await client.query(`
+                INSERT INTO anniv3.users ( username, avatar, email_hash )
+                VALUES ( $1, $2, anniv3.hash_email( $3 ) )
                 ON CONFLICT DO NOTHING
-            `, [ author.name, author.avatar ] );
+                RETURNING id
+            `, [ author.name, author.avatar, author.email ] );
+            if ( result.rows.length === 0 ) {
+                throw USER_EXISTS_ERROR;
+            }
+
             result = await client.query(`
                 INSERT INTO anniv3.messages ( author, content )
                 SELECT u.id, $2
@@ -124,26 +136,17 @@ module.exports = {
                 ON CONFLICT DO NOTHING
                 RETURNING id, time_posted AS timestamp
             `, [ author.name, content ] );
-
-            if ( result.rows.length > 0 ) {
-                res.status( 201 );
-                await client.query( `COMMIT` );
-            } else {
-                res.status( 409 );
-                result = await client.query(`
-                    SELECT anniv3.messages.id AS id, time_posted AS timestamp
-                    FROM anniv3.messages INNER JOIN anniv3.users ON anniv3.messages.author = anniv3.users.id
-                    WHERE username = $1
-                `, [ author.name ] );
-                await client.query( `ROLLBACK` ); // Should never happen of the first insert succeeding while
-            }                                     // the second fails but JUST IN CASE
+            if ( result.rows.length === 0 ) { // Should never happen of the first insert succeeding 
+                throw USER_EXISTS_ERROR;      // while the second fails but JUST IN CASE
+            }    
+            await client.query( `COMMIT` );                                 
         } catch ( e ) {
             await client.query( `ROLLBACK` );
             throw e;
         } finally {
             client.release();
-        };
-        res.json( result.rows[0] );
+        }
+        res.status( 201 ).json( result.rows[0] );
 
     }),
 };
