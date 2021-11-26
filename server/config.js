@@ -1,7 +1,9 @@
 export const devMode = ( process.env.DEV || 1 ) != 0;
 export const localMode = ( process.env.LOCAL || 1 ) != 0;
 export const verboseMode = ( process.env.VERBOSE || 0 ) != 0;
+
 export const serverPort = process.env.PORT || 8855;
+export const websiteOrigin = process.env.WEBSITE_ORIGIN || 'localhost';
 
 import path from 'path';
 import { mkdir } from 'fs/promises';

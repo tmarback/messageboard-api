@@ -15,6 +15,7 @@
   "private": true,
   "dependencies": {
     "axios": "^0.24.0",
+    "cors": "^2.8.5",
     "email-validator": "^2.0.4",
     "express": "^4.16.3",
     "express-async-handler": "^1.2.0",

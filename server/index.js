@@ -1,11 +1,11 @@
 'use strict';
 
-import { devMode, localMode, serverPort, loglevel, baseLogger, makeLogger, makePool } from './config.js';
+import { devMode, localMode, serverPort, websiteOrigin, loglevel, baseLogger, makeLogger, makePool } from './config.js';
 import resolver from './esmresolver.js'
 
-import express from 'express';
 import http from 'http';
 import path from 'path';
+import express from 'express';
 
 import { fileURLToPath } from 'url';
 const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
@@ -15,8 +15,8 @@ const app = express();
 import YAML from 'yamljs';
 import swaggerUI from 'swagger-ui-express';
 import OpenApiValidator from 'express-openapi-validator';
-
 import expressWinston from 'express-winston';
+import cors from 'cors';
 
 const apiLogger = makeLogger( 'API' );
 app.use( expressWinston.logger({
@@ -28,6 +28,11 @@ app.use( expressWinston.logger({
 }));
 
 app.use(express.json());
+
+const corsOptions = {
+    origin: devMode ? '*' : websiteOrigin,
+}
+app.use( cors( corsOptions ) );
 
 app.get( '/', ( req, res ) => { // Redirect root to specification
     res.redirect( 301, '/spec/' );
