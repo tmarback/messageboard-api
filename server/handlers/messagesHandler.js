@@ -130,18 +130,22 @@ export const postMessage = asyncHandler( async ( req, res ) => {
         await mkdir( userPath, 0o775 );
         const frames = await Promise.allSettled( author.avatar.map( async ( url, idx ) => {
             try {
+                logger.debug( `Downloading avatar frame ${idx} for user ${uid} from ${url}` );
                 const response = await axios.get( url, {
                     responseType: 'arraybuffer',
                     maxContentLength: 10_000_000,
                     maxRedirects: 5,
                     timeout: 1_000,
                 });
+                logger.debug( `Avatar frame ${idx} for user ${uid} downloaded` );
                 const buffer = Buffer.from( response.data, 'binary' );
                 const image = await Jimp.read( buffer );
                 image.cover( 300, 300, Jimp.HORIZONTAL_ALIGN_CENTER | Jimp.VERTICAL_ALIGN_MIDDLE );
+                logger.silly( `Avatar frame ${idx} for user ${uid} converted` );
 
                 const filename = `${idx}.png`
                 await image.writeAsync( path.join( userPath, filename ) );
+                logger.silly( `Avatar frame ${idx} for user ${uid} saved` );
                 return `${assetsUri}/${userDir}/${filename}`;
             } catch ( e ) {
                 logger.verbose( `Avatar frame ${idx} (${url}) download failed: ${e}` );
