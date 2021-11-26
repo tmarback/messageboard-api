@@ -84,7 +84,7 @@ jobs:
             source .bash_profile
             cd docker/anniv3
             mkdir -p "${{ needs.build.outputs.ver }}/log"
-            ENV_FILE="${{ needs.build.outputs.ver }}.env"
+            ENV_FILE="${{ needs.build.outputs.ver }}/.env"
             [ -f "${ENV_FILE}" ]
             docker-compose --env-file "${ENV_FILE}" pull
             docker-compose --env-file "${ENV_FILE}" up --detach --force-recreate
