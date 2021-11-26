@@ -1,18 +1,22 @@
 'use strict';
 
-const { devMode, localMode, serverPort, loglevel, baseLogger, makeLogger, makePool } = require('./config');
+import { devMode, localMode, serverPort, loglevel, baseLogger, makeLogger, makePool } from './config.js';
+import resolver from './esmresolver.js'
 
-const express = require("express");
-const http = require('http');
-const path = require('path');
+import express from 'express';
+import http from 'http';
+import path from 'path';
+
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 
 const app = express();
 
-const YAML = require('yamljs')
-const swaggerUI = require('swagger-ui-express');
-const OpenApiValidator = require('express-openapi-validator');
+import YAML from 'yamljs';
+import swaggerUI from 'swagger-ui-express';
+import OpenApiValidator from 'express-openapi-validator';
 
-const expressWinston = require('express-winston');
+import expressWinston from 'express-winston';
 
 const apiLogger = makeLogger( 'API' );
 app.use( expressWinston.logger({
@@ -29,7 +33,7 @@ app.get( '/', ( req, res ) => { // Redirect root to specification
     res.redirect( 301, '/spec/' );
 });
 
-const specPath = path.join( __dirname, '/api/api-spec.yaml' );
+const specPath = path.join( __dirname, 'api/api-spec.yaml' );
 const spec = YAML.load( specPath );
 if ( localMode ) { // Remove all security in local mode
     baseLogger.info( "LOCAL mode - removing all security" );
@@ -104,7 +108,10 @@ app.use(
         validateApiSpec: true,
         validateFormats: 'fast',
         unknownFormats: true,
-        operationHandlers: path.join(__dirname, '/handlers'),
+        operationHandlers: {
+            basePath: path.join( __dirname, 'handlers' ),
+            resolver: resolver, // Until the validator supports modules natively
+        },
     }),
 );
 
@@ -124,7 +131,7 @@ app.use( expressWinston.errorLogger({
 }));
 
 app.use((err, req, res, next) => {
-    // console.error(err);
+    apiLogger.debug( `Handling error: ${err}` );
     const status = err.status || 500;
     const headers = err.headers || [];
     for ( const [ header, val ] of headers ) {

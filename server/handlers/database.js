@@ -1,10 +1,8 @@
 'use strict'
 
-const { devMode, makePool } = require( '../config' );
+import { devMode, makePool } from '../config.js';
 
 const conn = makePool( devMode ? 'dev' : 'anniv3', devMode ? 4 : 20 );
 
-module.exports = {
-    getClient: () => conn.connect(),
-    query: ( query, args = [] ) => conn.query( query, args ),
-};
+export function getClient() { return conn.connect(); };
+export function query( query, args = [] ) { return conn.query( query, args ); };

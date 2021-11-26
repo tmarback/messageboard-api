@@ -104,4 +104,7 @@ dist
 .tern-port
 
 # VS Code project files
-.vscode
+.vscode/
+
+# Generated assets
+assets/
