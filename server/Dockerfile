@@ -20,6 +20,9 @@ ENV VERBOSE=0
 ENV PORT=8855
 ENV WEBSITE_ORIGIN="localhost"
 
+ENV ASSETS_DIR="./assets"
+ENV ASSETS_URI="localhost"
+
 ENV LOG_TO_FILE=1
 ENV LOG_DIR="/var/log/server"
 
