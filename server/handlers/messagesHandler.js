@@ -135,7 +135,7 @@ export const postMessage = asyncHandler( async ( req, res ) => {
                     responseType: 'arraybuffer',
                     maxContentLength: 10_000_000,
                     maxRedirects: 5,
-                    timeout: 1_000,
+                    timeout: 5_000,
                 });
                 logger.debug( `Avatar frame ${idx} for user ${uid} downloaded` );
                 const buffer = Buffer.from( response.data, 'binary' );
