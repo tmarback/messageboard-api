@@ -1,6 +1,6 @@
 'use strict';
 
-import { devMode, localMode, serverPort, websiteOrigin, loglevel, baseLogger, makeLogger, makePool } from './config.js';
+import { devMode, localMode, serverPort, websiteOrigin, trustedProxies, loglevel, baseLogger, makeLogger, makePool } from './config.js';
 import resolver from './esmresolver.js'
 
 import http from 'http';
@@ -12,11 +12,16 @@ const __dirname = path.dirname( fileURLToPath( import.meta.url ) );
 
 const app = express();
 
+import cors from 'cors';
 import YAML from 'yamljs';
 import swaggerUI from 'swagger-ui-express';
 import OpenApiValidator from 'express-openapi-validator';
 import expressWinston from 'express-winston';
-import cors from 'cors';
+import rateLimit from 'express-rate-limit';
+
+if ( !localMode ) { // Configure proxy if not running locally
+    app.set( 'trust proxy', trustedProxies );
+}
 
 const apiLogger = makeLogger( 'API' );
 app.use( expressWinston.logger({
@@ -27,7 +32,16 @@ app.use( expressWinston.logger({
     meta: true,
 }));
 
-app.use(express.json());
+if ( !devMode ) { // Limit new messages to one per day per client IP
+    app.post( '/messages', rateLimit({
+        max: 1,
+        windowMs: 24 * 60 * 60 * 1000,
+        headers: true,
+        skipFailedRequests: true,
+    }));
+}
+
+app.use( express.json() );
 
 const corsOptions = {
     origin: devMode ? '*' : websiteOrigin,

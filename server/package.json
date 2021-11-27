@@ -20,6 +20,7 @@
     "express": "^4.16.3",
     "express-async-handler": "^1.2.0",
     "express-openapi-validator": "^4.13.2",
+    "express-rate-limit": "^5.5.1",
     "express-winston": "^4.2.0",
     "jimp": "^0.16.1",
     "pg": "^8.7.1",

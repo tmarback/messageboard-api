@@ -4,6 +4,7 @@ export const verboseMode = ( process.env.VERBOSE || 0 ) != 0;
 
 export const serverPort = process.env.PORT || 8855;
 export const websiteOrigin = process.env.WEBSITE_ORIGIN || 'localhost';
+export const trustedProxies = ( process.env.TRUSTED_PROXIES || 0 ) | 0;
 
 import path from 'path';
 import { mkdir } from 'fs/promises';
