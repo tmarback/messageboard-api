@@ -54,55 +54,57 @@ app.get( '/', ( req, res ) => { // Redirect root to specification
 
 const specPath = path.join( __dirname, 'api/api-spec.yaml' );
 const spec = YAML.load( specPath );
+
 if ( localMode ) { // Remove all security in local mode
-    baseLogger.info( "LOCAL mode - removing all security" );
-    delete spec.components.security;
-    delete spec.components.securitySchemes;
+    baseLogger.info( "LOCAL mode - disabling all security" );
     var validateSecurity = false;
-} else if ( devMode ) { // Use only API key for dev server
-    baseLogger.info( "DEV mode - configuring API key security" );
-    const apiKeyHeader = 'X-API-Key';
-    spec.components.securitySchemes = {
-        ApiKeyAuth: {
-            type: 'apiKey',
-            in: 'header',
-            name: apiKeyHeader,
-        }
-    };
-    spec.security = [
-        { ApiKeyAuth: [] }
-    ];
+} else {
+    baseLogger.info( "PUBLIC mode - configuring security handling" );
     const apiKeyPool = makePool( 'auth', devMode ? 1 : 5 );
     const authLogger = makeLogger( 'auth' );
-    validateSecurity = {
+    var validateSecurity = {
         handlers: {
-            ApiKeyAuth: (req, scopes, schema) => {
-                const key = req.get( apiKeyHeader );
-                authLogger.debug( `Evaluating API key ${key}` );
-                return apiKeyPool.query( 'SELECT api_key_auth.has_access( $1::text, $2::text, $3::text )',
-                                         [ key, 'anniv3', 'dev' ] ).then( res => {
-                    authLogger.debug( `DB response for API key ${key} received` );
-                    authLogger.debug( `DB response for API key ${key} has ${res.rows.length} rows` );
-                    const result = res.rows[0].has_access;
-                    authLogger.verbose( `API key ${key} returned response ${result} from the database` );
-                    switch ( result ) {
-                        case 0: // Valid key, has access
-                            authLogger.debug( `API key ${key} is authorized` );
-                            return true;
-                        case 1: // Valid key, no access
-                            authLogger.debug( `API key ${key} is valid but has insufficient permissions` );
-                            throw { status: 403, message: 'Forbidden' };
-                        case 2: // Invalid key
-                            authLogger.debug( `API key ${key} is invalid` );
-                            throw { status: 401, message: 'Unauthorized', headers: [ 
-                                [ 'WWW-Authenticate', apiKeyHeader ],
-                            ] };
-                        default: // WTF?
-                            authLogger.error( `API key ${key} query returned invalid response ${result}` );
-                            throw Error( "Unexpected response to API key check query" );
-                    }
-                });
+            ApiKeyAuth: async ( req, scopes, schema ) => {
+                const headerName = schema.name;
+                const key = req.get( headerName );
+                authLogger.debug( `Evaluating API key ${key} for roles ${scopes}` );
+                const res = await apiKeyPool.query( 'SELECT api_key_auth.has_access( $1::text, $2::text, $3::text[] )',
+                                        [ key, 'anniv3', scopes ] );
+
+                authLogger.debug( `DB response for API key ${key} received` );
+                authLogger.silly( `DB response for API key ${key} has ${res.rows.length} rows` );
+                const result = res.rows[0].has_access;
+                authLogger.verbose( `API key ${key} returned response ${result} from the database` );
+                switch ( result ) {
+                    case 0: // Valid key, has access
+                        authLogger.info( `API key ${key} is authorized for endpoint ${req.path} ${req.method}` );
+                        return true;
+                    case 1: // Valid key, no access
+                        authLogger.info( `API key ${key} is valid but has insufficient permissions for endpoint ${req.path} ${req.method}` );
+                        throw { status: 403, message: 'Forbidden' };
+                    case 2: // Invalid key
+                        authLogger.info( `API key ${key} is invalid` );
+                        throw { status: 401, message: 'Unauthorized', headers: [ 
+                            [ 'WWW-Authenticate', headerName ],
+                        ] };
+                    default: // WTF?
+                        authLogger.error( `API key ${key} query returned invalid response ${result}` );
+                        throw Error( "Unexpected response to API key check query" );
+                }
             }
+        }
+    };
+}
+
+if ( devMode ) { // Use only API key for dev server
+    baseLogger.info( "DEV mode - configuring API key security globally" );
+    spec.security = [
+        { ApiKeyAuth: [ 'dev' ] }
+    ];
+    for ( const [ path, pathSchema ] of Object.entries( spec.paths ) ) {
+        for ( const [ operation, opSchema ] of Object.entries( pathSchema ) ) {
+            console.debug( `Removing security for ${path} ${operation}` );
+            delete opSchema.security
         }
     }
 } else {
@@ -111,7 +113,6 @@ if ( localMode ) { // Remove all security in local mode
     const version = `v${fullVersion.split( "." )[0]}`;
     spec.servers[0].variables.version.enum = [ version ];
     spec.servers[0].variables.version.default = version;
-    validateSecurity = true;
 }
 app.get( '/spec/raw.json', ( req, res ) => {
     res.status( 200 ).json( spec );
@@ -140,7 +141,7 @@ app.use( expressWinston.errorLogger({
     meta: true,
     responseField: null, // Error object already has the relevant info
     level: 'error',
-    exceptionToMeta: (error) => {
+    exceptionToMeta: ( error ) => {
         return {
             error: error,
             exception: true,
@@ -149,7 +150,7 @@ app.use( expressWinston.errorLogger({
     }
 }));
 
-app.use((err, req, res, next) => {
+app.use( ( err, req, res, next ) => {
     apiLogger.debug( `Handling error: ${err}` );
     const status = err.status || 500;
     const headers = err.headers || [];

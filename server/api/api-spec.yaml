@@ -22,7 +22,6 @@ servers:
         default: '8855'
         description: The port the server listens to
 
-
 paths:
   /messages:
     get:
@@ -124,6 +123,12 @@ paths:
           $ref: '#/components/responses/RateLimit'
 
 components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
   responses:
     BadRequest:
       description: The request sent by the client was malformed
