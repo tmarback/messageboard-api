@@ -228,6 +228,29 @@ export const putMessagesAdmin = asyncHandler( async ( req, res ) => {
 
 export const deleteMessagesAdmin = asyncHandler( async ( req, res ) => {
 
-    res.status( 501 ).json({ message: "Not yet implemented" });
+    /** @type {number} */
+    const id = req.query.id;
+    /** @type {boolean} */
+    const ban = req.query.ban;
+
+    const result = await query(
+        ban ?`
+            DELETE FROM anniv3.messages
+            WHERE id = $1
+            RETURNING 1
+        ` : `
+            DELETE FROM anniv3.users
+            WHERE id = ( SELECT author FROM anniv3.messages WHERE id = $1 )
+            RETURNING 1
+        `, [ id ] );
+
+    if ( result.rows.length > 0 ) {
+        res.status( 204 ).end();
+    } else {
+        throw {
+            status: 404,
+            message: "Not Found",
+        };
+    }
 
 });
