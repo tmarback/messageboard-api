@@ -26,6 +26,7 @@ paths:
   /messages:
     get:
       tags:
+        - Public
         - Messages
       summary: Retrieves posted messages.
       description: >
@@ -90,6 +91,7 @@ paths:
                       - pageCount
     post:
       tags:
+        - Public
         - Messages
         - Submission
       summary: Posts a new message.
@@ -122,6 +124,156 @@ paths:
         '429':
           $ref: '#/components/responses/RateLimit'
 
+  /messages/admin:
+    get:
+      tags:
+        - Admin
+        - Messages
+      summary: Retrieves posted messages, either approved or pending.
+      description: >
+        Retrieves posted messages in a paginated format.
+
+        There is no guarantee that the message list will not change between calls
+        to this method, so the same call in different points in time may give different results.
+      operationId: getMessagesAdmin
+      x-eov-operation-handler: messagesHandler
+      security:
+        - ApiKeyAuth: [ 'admin' ]
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+          required: true
+          description: The number of the page to retrieve
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          required: true
+          description: The number of items to use per page
+        - in: query
+          name: pending
+          schema:
+            type: boolean
+          required: true
+          description: |
+            If true, retrives only the pending messages, otherwise retrives only approved messages.
+            In the latter case, this method is equivalent to `GET /messages`.
+      responses:
+        '200':
+          description: Page found and returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page:
+                    type: integer
+                    description: The number of the page that was retrieved
+                  pageSize:
+                    type: integer
+                    description: The maximum size of the page
+                  pageCount:
+                    type: integer
+                    description: The number of pages that exist with the given page size
+                  pageData:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: There is no page with the given number for the given page size
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Error'
+                  - type: object
+                    properties:
+                      pageCount:
+                        type: integer
+                        description: The number of pages that exist with the given page size
+                    required:
+                      - pageCount
+    put:
+      tags:
+        - Admin
+        - Messages
+      summary: Sets a message to approved or pending.
+      operationId: putMessagesAdmin
+      x-eov-operation-handler: messagesHandler
+      security:
+        - ApiKeyAuth: [ 'admin' ]
+      parameters:
+        - in: query
+          name: id
+          schema:
+            $ref: '#/components/schemas/MessageId'
+          required: true
+          description: The ID of the message to set
+        - in: query
+          name: approve
+          schema:
+            type: boolean
+          required: true
+          description: |
+            If true, sets the message as approved.
+            Otherwise, sets it to pending.
+      responses:
+        '204':
+          description: The change was performed successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/MessageNotFound'
+    delete:
+      tags:
+        - Admin
+        - Messages
+      summary: Removes a message from the system.
+      operationId: deleteMessagesAdmin
+      x-eov-operation-handler: messagesHandler
+      security:
+        - ApiKeyAuth: [ 'admin' ]
+      parameters:
+        - in: query
+          name: id
+          schema:
+            $ref: '#/components/schemas/MessageId'
+          required: true
+          description: The ID of the message to delete
+        - in: query
+          name: ban
+          schema:
+            type: boolean
+          required: true
+          description: If true, the message poster is prevented from posting again
+      responses:
+        '204':
+          description: The message was deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/MessageNotFound'
+      
+
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -132,6 +284,18 @@ components:
   responses:
     BadRequest:
       description: The request sent by the client was malformed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Missing or invalid user authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: User does not have sufficient permissions
       content:
         application/json:
           schema:
@@ -149,6 +313,12 @@ components:
           schema:
             type: integer
           description: How many seconds to wait before trying again
+    MessageNotFound:
+      description: There is no message with the given ID
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
 
   schemas:
     Error:

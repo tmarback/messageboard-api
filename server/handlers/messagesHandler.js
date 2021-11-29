@@ -18,7 +18,7 @@ const MESSAGE_EXISTS_ERROR = {
     message: `User already posted a message`
 };
 
-export const getMessages = asyncHandler( async ( req, res ) => {
+async function getMessagesBase( req, res, visible ) {
 
     const page = req.query.page;
     const pageSize = req.query.pageSize;
@@ -33,16 +33,16 @@ export const getMessages = asyncHandler( async ( req, res ) => {
             FROM     anniv3.messages 
                         INNER JOIN anniv3.users ON anniv3.messages.author = anniv3.users.id 
                         INNER JOIN anniv3.avatars ON anniv3.users.id = anniv3.avatars.id 
-            WHERE visible
+            WHERE visible = $1
             ORDER BY time_posted ASC, id ASC
-            LIMIT    $1
-            OFFSET   $2
-        `, [ pageSize, ( page - 1 ) * pageSize ] );
+            LIMIT    $2
+            OFFSET   $3
+        `, [ visible, pageSize, ( page - 1 ) * pageSize ] );
         const resCount = await client.query(`
             SELECT COUNT(*) AS total
             FROM   anniv3.messages
-            WHERE  visible
-        `);
+            WHERE  visible = $1
+        `, [ visible ] );
 
         pageData = resPage.rows;
         pageCount = Math.ceil( resCount.rows[0].total / pageSize );
@@ -77,7 +77,9 @@ export const getMessages = asyncHandler( async ( req, res ) => {
         });
     }
 
-});
+}
+
+export const getMessages = asyncHandler( ( req, res ) => getMessagesBase( req, res, true ) );
 
 export const postMessage = asyncHandler( async ( req, res ) => {
 
@@ -194,5 +196,19 @@ export const postMessage = asyncHandler( async ( req, res ) => {
         client.release();
     }
     res.status( 201 ).json( result.rows[0] );
+
+});
+
+export const getMessagesAdmin = asyncHandler( ( req, res ) => getMessagesBase( req, res, !req.query.pending ) );
+
+export const putMessagesAdmin = asyncHandler( async ( req, res ) => {
+
+    res.status( 501 ).json({ message: "Not yet implemented" });
+
+});
+
+export const deleteMessagesAdmin = asyncHandler( async ( req, res ) => {
+
+    res.status( 501 ).json({ message: "Not yet implemented" });
 
 });
