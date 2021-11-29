@@ -4,7 +4,7 @@ import { mkdir, rm } from 'fs/promises';
 import path from 'path';
 
 import { makeLogger, assetsDir, assetsUri, devMode } from '../config.js';
-import { getClient } from './database.js';
+import { getClient, query } from './database.js';
 
 import asyncHandler from 'express-async-handler';
 import validator from 'email-validator';
@@ -203,7 +203,26 @@ export const getMessagesAdmin = asyncHandler( ( req, res ) => getMessagesBase( r
 
 export const putMessagesAdmin = asyncHandler( async ( req, res ) => {
 
-    res.status( 501 ).json({ message: "Not yet implemented" });
+    /** @type {number} */
+    const id = req.query.id;
+    /** @type {boolean} */
+    const approve = req.query.approve;
+
+    const result = await query(`
+        UPDATE anniv3.messages
+        SET visible = $1
+        WHERE id = $2
+        RETURNING 1
+    `, [ approve, id ] );
+
+    if ( result.rows.length > 0 ) {
+        res.status( 204 ).end();
+    } else {
+        throw {
+            status: 404,
+            message: "Not Found",
+        };
+    }
 
 });
 

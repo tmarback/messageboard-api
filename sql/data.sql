@@ -25,5 +25,5 @@ CREATE TABLE IF NOT EXISTS anniv3.messages(
     visible     BOOLEAN                     NOT NULL DEFAULT FALSE,
     UNIQUE ( author ) -- We're only allowing one message per person
 );
-CREATE UNIQUE INDEX IF NOT EXISTS visible_messages ON anniv3.messages( id ) WHERE visible;
-CREATE UNIQUE INDEX IF NOT EXISTS pending_messages ON anniv3.messages( id ) WHERE NOT visible;
+CREATE UNIQUE INDEX IF NOT EXISTS visible_messages ON anniv3.messages ( id ) WHERE visible = TRUE;
+CREATE UNIQUE INDEX IF NOT EXISTS pending_messages ON anniv3.messages ( id ) WHERE visible = FALSE;
