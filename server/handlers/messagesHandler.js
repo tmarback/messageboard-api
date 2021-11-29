@@ -33,6 +33,7 @@ export const getMessages = asyncHandler( async ( req, res ) => {
             FROM     anniv3.messages 
                         INNER JOIN anniv3.users ON anniv3.messages.author = anniv3.users.id 
                         INNER JOIN anniv3.avatars ON anniv3.users.id = anniv3.avatars.id 
+            WHERE visible
             ORDER BY time_posted ASC, id ASC
             LIMIT    $1
             OFFSET   $2
@@ -40,6 +41,7 @@ export const getMessages = asyncHandler( async ( req, res ) => {
         const resCount = await client.query(`
             SELECT COUNT(*) AS total
             FROM   anniv3.messages
+            WHERE  visible
         `);
 
         pageData = resPage.rows;
