@@ -1,6 +1,6 @@
 {
   "name": "mio-3rd-anniversary-fan-website-api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "API for the fan website made for Ookami Mio's 3rd anniversary",
   "type": "module",
   "main": "index.js",
