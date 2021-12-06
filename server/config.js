@@ -35,7 +35,7 @@ const consoleFormat = winston.format.printf(({ level, message, timestamp, logger
     return `[${timestamp}] [${loggerName}] [${level}]: ${message}`;
 });
 var transports = [new winston.transports.Console({
-    level: devMode ? loglevel : 'warn',
+    level: devMode ? loglevel : 'info',
     format: winston.format.combine(
         winston.format.colorize(),
         winston.format.timestamp(),

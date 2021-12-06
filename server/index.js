@@ -32,6 +32,13 @@ app.use( expressWinston.logger({
     meta: true,
 }));
 
+app.use( express.json() );
+
+const corsOptions = {
+    origin: ( devMode || localMode ) ? '*' : websiteOrigin,
+}
+app.use( cors( corsOptions ) );
+
 if ( !devMode ) { // Limit new messages to one per day per client IP
     app.post( '/messages', rateLimit({
         max: 1,
@@ -40,13 +47,6 @@ if ( !devMode ) { // Limit new messages to one per day per client IP
         skipFailedRequests: true,
     }));
 }
-
-app.use( express.json() );
-
-const corsOptions = {
-    origin: devMode ? '*' : websiteOrigin,
-}
-app.use( cors( corsOptions ) );
 
 app.get( '/', ( req, res ) => { // Redirect root to specification
     res.redirect( 301, '/spec/' );
