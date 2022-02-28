@@ -1,6 +1,6 @@
 openapi: '3.0.2'
 info:
-  title: Mio 3rd Anniversary Fan-Website API
+  title: Messageboard API
   version: '1.0.0'
   license:
     name: MIT

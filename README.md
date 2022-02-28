@@ -1,8 +1,8 @@
-# mio-api-anniv3
+# messageboard-api
 
 ## Overview
 
-Backend API server for the fanmade website commemorating Ookami Mio's 3rd anniversary.
+Backend API server for collecting and displaying user-submitted messages.
 
 Made using [Express.js](https://expressjs.com/) and [express-openapi-validator](https://github.com/cdimascio/express-openapi-validator).
 

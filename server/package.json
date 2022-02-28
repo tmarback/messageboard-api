@@ -1,7 +1,7 @@
 {
-  "name": "mio-3rd-anniversary-fan-website-api",
+  "name": "messageboard-api",
   "version": "1.0.1",
-  "description": "API for the fan website made for Ookami Mio's 3rd anniversary",
+  "description": "Backend API server for collecting and displaying user-submitted messages.",
   "type": "module",
   "main": "index.js",
   "scripts": {
