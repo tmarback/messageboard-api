@@ -60,7 +60,7 @@ if ( localMode ) { // Remove all security in local mode
     var validateSecurity = false;
 } else {
     baseLogger.info( "PUBLIC mode - configuring security handling" );
-    const apiKeyPool = makePool( 'auth', devMode ? 1 : 5 );
+    const apiKeyPool = makePool( devMode ? 1 : 5, 'auth' );
     const authLogger = makeLogger( 'auth' );
     var validateSecurity = {
         handlers: {

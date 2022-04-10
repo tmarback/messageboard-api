@@ -89,14 +89,15 @@ export function makeLogger( name ) {
  * Creates a connection pool to the database.
  * 
  * @param {number} max Maximum number of connections
+ * @param {string} database The name of the database
  * @returns A connection pool to the given database
  */
-export function makePool( max ) {
+export function makePool( max, database = dbName ) {
     return new Pool({
         user: dbUser,
         password: dbPass,
         host: dbHost,
-        database: dbName,
+        database: database,
         port: dbPort,
         application_name: appName,
         max: max,
