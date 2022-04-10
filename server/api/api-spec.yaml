@@ -7,20 +7,8 @@ info:
     url: https://opensource.org/licenses/MIT
 
 servers:
-  - url: 'https://api.miosha.moe/anniv3/{version}'
+  - url: 'https://localhost:8855'
     description: Live server
-    variables:
-      version:
-        enum:
-          - dev
-        default: dev
-        description: The API version.
-  - url: 'http://localhost:{port}'
-    description: Locally-hosted server
-    variables:
-      port:
-        default: '8855'
-        description: The port the server listens to
 
 paths:
   /messages:

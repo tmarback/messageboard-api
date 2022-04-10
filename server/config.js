@@ -3,6 +3,7 @@ export const localMode = ( process.env.LOCAL || 1 ) != 0;
 export const verboseMode = ( process.env.VERBOSE || 0 ) != 0;
 
 export const serverPort = process.env.PORT || 8855;
+export const serverHost = process.env.HOST || `localhost:${serverPort}`;
 export const websiteOrigin = process.env.WEBSITE_ORIGIN || 'localhost';
 export const trustedProxies = ( process.env.TRUSTED_PROXIES || 0 ) | 0;
 
@@ -24,8 +25,14 @@ export const loglevel = process.env.LOG_LEVEL || ( devMode ? 'debug' : ( verbose
 
 const dbHost = process.env.DB_HOST || 'localhost';
 const dbPort = ( process.env.DB_PORT || 5432 ) | 0;
-const dbUser = process.env.DB_USER || ( devMode ? 'dev' : 'anniv3' );
+const dbUser = process.env.DB_USER || ( devMode ? 'dev' : 'postgres' );
 const dbPass = process.env.DB_PASSWORD || 'nopassword';
+const dbName = process.env.DB_NAME || ( devMode ? 'dev' : 'messageboard' );
+
+// For database access logging
+const appName = process.env.APP_NAME || 'messageboard';
+// For auth
+export const appAuth = process.env.APP_AUTH || 'messageboard';
 
 import winston from 'winston';
 import pg from 'pg';
@@ -79,20 +86,19 @@ export function makeLogger( name ) {
 };
 
 /**
- * Creates a connection pool to a database.
+ * Creates a connection pool to the database.
  * 
- * @param {string} database The database to connect to
  * @param {number} max Maximum number of connections
  * @returns A connection pool to the given database
  */
-export function makePool( database, max ) {
+export function makePool( max ) {
     return new Pool({
         user: dbUser,
         password: dbPass,
         host: dbHost,
-        database: database,
+        database: dbName,
         port: dbPort,
-        application_name: 'anniv3-website',
+        application_name: appName,
         max: max,
       });
 };

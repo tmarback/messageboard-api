@@ -1,6 +1,6 @@
 'use strict';
 
-import { devMode, localMode, serverPort, websiteOrigin, trustedProxies, loglevel, baseLogger, makeLogger, makePool } from './config.js';
+import { devMode, localMode, serverHost, serverPort, websiteOrigin, trustedProxies, loglevel, baseLogger, makeLogger, makePool, appAuth } from './config.js';
 import resolver from './esmresolver.js'
 
 import http from 'http';
@@ -69,7 +69,7 @@ if ( localMode ) { // Remove all security in local mode
                 const key = req.get( headerName );
                 authLogger.debug( `Evaluating API key ${key} for roles ${scopes}` );
                 const res = await apiKeyPool.query( 'SELECT api_key_auth.has_access( $1::text, $2::text, $3::text[] )',
-                                        [ key, 'anniv3', scopes ] );
+                                        [ key, appAuth, scopes ] );
 
                 authLogger.debug( `DB response for API key ${key} received` );
                 authLogger.silly( `DB response for API key ${key} has ${res.rows.length} rows` );
@@ -108,12 +108,11 @@ if ( devMode ) { // Use only API key for dev server
         }
     }
 } else {
-    baseLogger.info( "PROD mode - Setting version" );
-    const fullVersion = spec.info.version;
-    const version = `v${fullVersion.split( "." )[0]}`;
-    spec.servers[0].variables.version.enum = [ version ];
-    spec.servers[0].variables.version.default = version;
+    baseLogger.info( "PROD mode" );
 }
+
+spec.servers[0].url = `https://${serverHost}`;
+
 app.get( '/spec/raw.json', ( req, res ) => {
     res.status( 200 ).json( spec );
 })

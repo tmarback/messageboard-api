@@ -29,10 +29,10 @@ async function getMessagesBase( req, res, visible ) {
     try {
         await client.query( `BEGIN READ ONLY` );
         const resPage = await client.query(`
-            SELECT   anniv3.messages.id AS id, time_posted AS timestamp, username, avatar, content
-            FROM     anniv3.messages 
-                        INNER JOIN anniv3.users ON anniv3.messages.author = anniv3.users.id 
-                        INNER JOIN anniv3.avatars ON anniv3.users.id = anniv3.avatars.id 
+            SELECT   messageboard.messages.id AS id, time_posted AS timestamp, username, avatar, content
+            FROM     messageboard.messages 
+                        INNER JOIN messageboard.users ON messageboard.messages.author = messageboard.users.id 
+                        INNER JOIN messageboard.avatars ON messageboard.users.id = messageboard.avatars.id 
             WHERE visible = $1
             ORDER BY time_posted ASC, id ASC
             LIMIT    $2
@@ -40,7 +40,7 @@ async function getMessagesBase( req, res, visible ) {
         `, [ visible, pageSize, ( page - 1 ) * pageSize ] );
         const resCount = await client.query(`
             SELECT COUNT(*) AS total
-            FROM   anniv3.messages
+            FROM   messageboard.messages
             WHERE  visible = $1
         `, [ visible ] );
 
@@ -119,8 +119,8 @@ export const postMessage = asyncHandler( async ( req, res ) => {
         await client.query( `BEGIN` );
 
         result = await client.query(`
-            INSERT INTO anniv3.users ( username, email_hash )
-            VALUES ( $1, anniv3.hash_email( $2 ) )
+            INSERT INTO messageboard.users ( username, email_hash )
+            VALUES ( $1, messageboard.hash_email( $2 ) )
             ON CONFLICT DO NOTHING
             RETURNING id
         `, [ author.name, author.email ] );
@@ -172,12 +172,12 @@ export const postMessage = asyncHandler( async ( req, res ) => {
         }
 
         await client.query(`
-            INSERT INTO anniv3.avatars ( id, avatar )
+            INSERT INTO messageboard.avatars ( id, avatar )
             VALUES ( $1, $2 )
         `, [ uid, frames ] );
 
         result = await client.query(`
-            INSERT INTO anniv3.messages ( author, content )
+            INSERT INTO messageboard.messages ( author, content )
             VALUES ( $1, $2 )
             ON CONFLICT DO NOTHING
             RETURNING id, time_posted AS timestamp
@@ -209,7 +209,7 @@ export const putMessagesAdmin = asyncHandler( async ( req, res ) => {
     const approve = req.query.approve;
 
     const result = await query(`
-        UPDATE anniv3.messages
+        UPDATE messageboard.messages
         SET visible = $1
         WHERE id = $2
         RETURNING 1
@@ -235,12 +235,12 @@ export const deleteMessagesAdmin = asyncHandler( async ( req, res ) => {
 
     const result = await query(
         ban ?`
-            DELETE FROM anniv3.messages
+            DELETE FROM messageboard.messages
             WHERE id = $1
             RETURNING 1
         ` : `
-            DELETE FROM anniv3.users
-            WHERE id = ( SELECT author FROM anniv3.messages WHERE id = $1 )
+            DELETE FROM messageboard.users
+            WHERE id = ( SELECT author FROM messageboard.messages WHERE id = $1 )
             RETURNING 1
         `, [ id ] );
 
