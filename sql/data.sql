@@ -1,13 +1,14 @@
 CREATE SCHEMA IF NOT EXISTS messageboard;
+CREATE SCHEMA IF NOT EXISTS extensions;
 
-CREATE EXTENSION IF NOT EXISTS "pgcrypto" SCHEMA messageboard;
+CREATE EXTENSION IF NOT EXISTS "pgcrypto" SCHEMA extensions;
 CREATE OR REPLACE FUNCTION messageboard.hash_email( TEXT ) returns TEXT AS $$
-    SELECT encode( messageboard.digest( $1, 'sha256' ), 'hex' )
+    SELECT encode( extensions.digest( $1, 'sha256' ), 'hex' )
 $$ LANGUAGE SQL STRICT IMMUTABLE;
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp" SCHEMA messageboard;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" SCHEMA extensions;
 CREATE TABLE IF NOT EXISTS messageboard.users(
-    id          UUID            PRIMARY KEY DEFAULT messageboard.uuid_generate_v4(),
+    id          UUID            PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     username    VARCHAR( 20 )   NOT NULL UNIQUE,
     email_hash  TEXT            NOT NULL UNIQUE
 );
