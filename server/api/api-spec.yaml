@@ -9,6 +9,12 @@ info:
 servers:
   - url: 'https://localhost:8855'
     description: Live server
+  - url: 'http://localhost:{port}' # Mostly to force the validator to take in / as base path
+    description: Locally-hosted server
+    variables:
+      port:
+        default: '8855'
+        description: The port the server listens to
 
 paths:
   /messages:
