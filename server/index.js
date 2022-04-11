@@ -35,7 +35,7 @@ app.use( expressWinston.logger({
 app.use( express.json() );
 
 const corsOptions = {
-    origin: ( devMode || localMode ) ? '*' : websiteOrigin,
+    origin: '*',
 }
 app.use( cors( corsOptions ) );
 
