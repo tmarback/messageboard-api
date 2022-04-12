@@ -199,7 +199,12 @@ export const postMessage = asyncHandler( async ( req, res ) => {
 
 });
 
-export const getMessagesAdmin = asyncHandler( ( req, res ) => getMessagesBase( req, res, !req.query.pending ) );
+export const getMessagesAdmin = asyncHandler( ( req, res ) => {
+    
+    res.set( 'Cache-Control', 'private,max-age=10,must-revalidate' );
+    getMessagesBase( req, res, !req.query.pending );
+
+});
 
 export const putMessagesAdmin = asyncHandler( async ( req, res ) => {
 
